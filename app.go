@@ -30,6 +30,13 @@ func main() {
 			log.Fatalln(err)
 		}
 	}()
+	// DDL
+	//create table public.mst_membership_wallet
+	//(
+	//    membership_id integer primary key,
+	//    wallet_amount double precision,
+	//    description   varchar(20)
+	//);
 	//tx := db.MustBegin()
 	//tx.NamedExec("INSERT INTO mst_membership_wallet VALUES (:membership_id, :wallet_amount, :description)", &Wallet{1, 10000, "Isi wallet"})
 	//tx.NamedExec("INSERT INTO mst_membership_wallet VALUES (:membership_id, :wallet_amount, :description)", &Wallet{2, 5000, "Isi wallet"})
@@ -41,10 +48,10 @@ func main() {
 	_, err = tx.NamedExec("update mst_membership_wallet set wallet_amount=wallet_amount+:wallet_amount,description=:description where membership_id=:membership_id", &Wallet{1, -1 * totalAmount, fmt.Sprintf("Kredit:%v", totalAmount)})
 	_, err = tx.NamedExec("update mst_membership_wallet set wallet_amount=wallet_amount+:wallet_amount,description=:description where membership_id=:membership_id", &Wallet{2, totalAmount, fmt.Sprintf("Debit:%v", totalAmount)})
 	if err != nil {
-		log.Fatalln(err)
-	}
-	err = tx.Commit()
-	if err != nil {
-		log.Fatalln(err)
+		if rollbackErr := tx.Rollback(); rollbackErr != nil {
+			log.Println(rollbackErr)
+		}
+	} else {
+		err = tx.Commit()
 	}
 }
