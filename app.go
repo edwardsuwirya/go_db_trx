@@ -36,15 +36,13 @@ func main() {
 	//tx.Commit()
 
 	// Simulasi transfer
-	totalAmount := 1000.0
-	tx := db.MustBegin()
-	_, err = tx.NamedExec("update mst_membership_wallet set wallet_amount=wallet_amount+:wallet_amount,description=:description where membership_id=:membership_id", &Wallet{1, -1 * totalAmount, fmt.Sprintf("Kredit:%v", totalAmount)})
-	_, err = tx.NamedExec("update mst_membership_wallet set wallet_amount=wallet_amount+:wallet_amount,description=:description where membership_id=:membership_id", &Wallet{2, totalAmount, fmt.Sprintf("Debit:%v", totalAmount)})
+	totalAmount := 2000.0
+	err = WithStmtTransaction(db, func(tx *sqlx.Tx) error {
+		_, err = tx.NamedExec("update mst_membership_wallet set wallet_amount=wallet_amount+:wallet_amount,description=:description where membership_id=:membership_id", &Wallet{1, -1 * totalAmount, fmt.Sprintf("Kredit:%v", totalAmount)})
+		_, err = tx.NamedExec("update mst_membership_wallet set wallet_amount=wallet_amount+:wallet_amount,description=:description where membership_id=:membership_id", &Wallet{2, totalAmount, fmt.Sprintf("Debit:%v", totalAmount)})
+		return err
+	})
 	if err != nil {
-		log.Fatalln(err)
-	}
-	err = tx.Commit()
-	if err != nil {
-		log.Fatalln(err)
+		log.Println(err.Error())
 	}
 }
